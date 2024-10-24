@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+  <style>
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif;
+    }
+    .chart-container {
+      position: relative;
+      margin: auto;
+      width: 100%;
+      height: 400px;
+      background: white;
+      border-radius: 3px;
+      padding: 16px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 3px;
+      background: rgba(55, 53, 47, 0.08);
+    }
+    .color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .counter {
+      margin-left: auto;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="chart-container">
+      <canvas id="statChart"></canvas>
+    </div>
+    <div class="stats" id="statCounters">
+      <!-- Stat counters will be inserted here -->
+    </div>
+  </div>
+
+  <script>
+    const stats = {
+      'Game Dev': {color: '#FF6B6B', count: 0},
+      'Woodwork': {color: '#8B4513', count: 0},
+      'Videography': {color: '#4ECDC4', count: 0},
+      'Gymnastics': {color: '#9D50BB', count: 0},
+      'Future Skill': {color: '#45B7D1', count: 0}
+    };
+
+    function createStatCounters() {
+      const container = document.getElementById('statCounters');
+      Object.entries(stats).forEach(([name, data]) => {
+        const div = document.createElement('div');
+        div.className = 'stat-item';
+        div.innerHTML = `
+          <div class="color-dot" style="background: ${data.color}"></div>
+          <span>${name}</span>
+          <span class="counter">${data.count}</span>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function initChart() {
+      const ctx = document.getElementById('statChart').getContext('2d');
+      const statChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: Object.keys(stats),
+          datasets: [{
+            data: Object.values(stats).map(s => s.count),
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: Object.values(stats).map(s => s.color),
+            borderWidth: 2,
+            pointBackgroundColor: Object.values(stats).map(s => s.color),
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: Object.values(stats).map(s => s.color)
+          }]
+        },
+        options: {
+          scales: {
+            r: {
+              beginAtZero: true,
+              suggestedMin: 0,
+              suggestedMax: 10,
+              ticks: {
+                display: false  // Hide numbers
+              },
+              grid: {
+                display: true,  // Show grid lines
+                color: 'rgba(0, 0, 0, 0.1)',  // Subtle grid color
+                lineWidth: 1
+              },
+              angleLines: {
+                display: true,
+                color: 'rgba(0, 0, 0, 0.1)'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          elements: {
+            line: {
+              tension: 0.4
+            }
+          }
+        }
+      });
+
+      // Function to update chart (you'll call this from Notion)
+      window.updateStat = function(statName) {
+        if (stats[statName]) {
+          stats[statName].count++;
+          statChart.data.datasets[0].data = Object.values(stats).map(s => s.count);
+          statChart.update();
+          
+          // Update counter display
+          const counters = document.querySelectorAll('.stat-item');
+          counters.forEach(counter => {
+            const name = counter.querySelector('span').textContent;
+            if (name === statName) {
+              counter.querySelector('.counter').textContent = stats[statName].count;
+            }
+          });
+        }
+      };
+    }
+
+    createStatCounters();
+    initChart();
+  </script>
+</body>
+</html>
